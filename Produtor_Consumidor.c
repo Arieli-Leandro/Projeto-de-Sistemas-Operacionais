@@ -75,6 +75,66 @@ ArmMemoriaCompartilhada * criaMemoriaCompartilhada(){
 
 }
 
+//criando a função responsável por inicializar os semáforos 
+void inicializaSemaforo(ArmMemoriaCompartilhada *mem){
+
+    //inicializando o semáforo de posiçções vazias
+    //o tamanho do buffer eu defini como uma constante de 5
+    if(sem_init(&mem->buffer_vazio, 1, TAM_BUFFER) == -1){
+
+        printf("Erro ao inicializar os semáforos vazios! \n");
+        exit(EXIT_FAILURE);
+
+    }
+
+    //inicializa o semáforo de produtos disponíveis
+    if(sem_init(&mem->buffer_cheio, 1, 0) == -1){
+
+        printf("Erro ao inicializar o buffer normal! \n");
+        exit(EXIT_FAILURE);
+
+    }
+
+    return;
+
+}
+
+//criando a função que é responsável por inicializar o mutex
+void inicializaMutex(ArmMemoriaCompartilhada *mem){
+
+    pthread_mutexattr_t atributos_mutex;
+
+    //inicializando os atributos do mutex
+    if(pthread_mutexattr_init(&atributos_mutex) != 0){
+
+        printf("Erro ao inicializar os atributos do mutex! \n");
+        exit(EXIT_FAILURE);
+
+    }
+
+    //compartilhando o mutex entre os processos
+    if(pthread_mutexattr_setpshared(&atributos_mutex, PTHREAD_PROCESS_SHARED) != 0){
+
+        printf("Erro ao compartilhar o mutex entre os processos! \n");
+        exit(EXIT_FAILURE);
+
+    }
+
+    //inicializando o mutex cm os atributos configurads
+    if(pthread_mutex_init(&mem->mutex, &atributos_mutex) != 0){
+        
+        printf("Erro ao inicializar o mutex! \n");
+        exit(EXIT_FAILURE);
+
+    }
+
+    //liberando o mutex depois do uso
+    pthread_mutexattr_destroy(&atributos_mutex);
+
+    return;
+
+}
+
 int main(){
 
 
