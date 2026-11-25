@@ -135,6 +135,107 @@ void inicializaMutex(ArmMemoriaCompartilhada *mem){
 
 }
 
+// -> O produtor é responsável por fabricar elementos e colocá-los no buffer compartilhado
+/* O que o produtor precisa fazer?
+1) Verificar se tem espaço
+2) Solicitar acesso ao buffer
+3) Inserir o produto
+4) Atualizar a posição do buffer (tem que ser circular)
+5) Liberar o buffer
+6) Avisar que existe um produto no buffer
+
+-> O produtor não pode ficar segurando o mutex enquanto espera o buffer liberar uma posição no vetor
+
+*/
+
+//criando a função responsável por criar o produtor
+void produtor(ArmMemoriaCompartilhada *mem, int id){
+
+    //estou produzindo exatamente a msm quantidade de posições do meu vetor
+    for(int i = 0; i< ITENS_POR_PRODUTOR; i++){
+
+        //aguarda até liberar espaço
+        sem_wait(&mem->buffer_vazio);
+
+        //bloqueando a região crítica de memória para que o produtor ou o consumidor não alterem a msm região ao mesmo tempo
+        pthread_mutex_lock(&mem->mutex);
+
+        //produzindo um elemento qlqr
+        int produto = id * 100 + i + 1;
+
+        //insere o produto dentro do buffer
+        mem->buffer[mem->in] = produto;
+
+        printf("O produtor %d produziu: %d na posição: %d \n", id, produto, mem->in);
+        fflush(stdout);
+
+        //atualiza a posição de inserção -> a posição está num buffer circular
+        mem->in = (men->in + 1) % TAM_BUFFER;
+
+        //desbloqueando a região crítica de memória
+        pthread_mutex_unlock(&mem->mutex);
+
+        //informando ao semáforo que existe um novo produto
+        sem_post(&mem->buffer_cheio);
+
+        //Só pra ficar melhor pra visualizar
+        sleep(1);
+
+    }
+
+    return;
+
+}
+
+//O consumidor é responsável por consumir oq acabamos de criar
+/*O que o consumidor precisar fazer? (basicamente é o contrário do produtor)
+1) Verificar se existe produto disponivel
+2) solicitar acesso ao buffer
+3) Retirar um produto
+4) Atualizar a posição
+5) Liberar o buffer
+6) Avisar q existe um espaço q acabou de liberar
+
+-> Aqui é aonde tem a inversão dos papéis do semáforo
+
+*/
+
+
+//criando a função do consumidor
+void consumidor(ArmMemoriaCompartilhada *mem, int id){
+
+    for(int i = 0; i< ITENS_POR_PRODUTOR; i++){
+
+        //se não tem produto disponível, aguarda até ter
+        sem_wait(&mem->buffer_cheio);
+
+        //bloqueia e entra na região crítica de memória
+        pthread_mutex_lock(&mem->mutex);
+
+        //consome o produto do buffer
+        int produto = mem->buffer[mem->out];
+
+        printf("Consumidor %d consumiu: %d da posição %d \n", id, produto, mem->out);
+        fflush(stdout);
+
+        //atualiza a posição de retirada no buffer circular
+        mem->out = (mem->out + 1) % TAM_BUFFER;
+
+        //saindo e desbloqueando a região crítica de memória
+        pthread_mutex_unlock(&mem->mutex);
+
+        //informa o semáforo q existe uma posição vazia
+        sem_post(&mem->buffer_vazio);
+
+        //Só pra ficar melhor pra ver
+        sleep(1);
+
+    }
+
+    return;
+
+}
+
 int main(){
 
 
