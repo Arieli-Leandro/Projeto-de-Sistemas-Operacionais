@@ -63,7 +63,7 @@ ArmMemoriaCompartilhada * criaMemoriaCompartilhada(){
     mem = mmap(NULL, sizeof(ArmMemoriaCompartilhada), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 
     //verificando se foi criada a memória compartilhada ou se deu erro
-    if(mem == MAP_FAILEP){
+    if(mem == MAP_FAILED){
 
         printf("Erro ao criar a memória compartilhada! \n");
         exit(1);
@@ -170,7 +170,7 @@ void produtor(ArmMemoriaCompartilhada *mem, int id){
         fflush(stdout);
 
         //atualiza a posição de inserção -> a posição está num buffer circular
-        mem->in = (men->in + 1) % TAM_BUFFER;
+        mem->in = (mem->in + 1) % TAM_BUFFER;
 
         //desbloqueando a região crítica de memória
         pthread_mutex_unlock(&mem->mutex);
@@ -238,9 +238,70 @@ void consumidor(ArmMemoriaCompartilhada *mem, int id){
 
 int main(){
 
+    //criando a memória compartilhada
+    ArmMemoriaCompartilhada *mem = criaMemoriaCompartilhada();
 
+    //inicializando as posições do buffer
+    mem->in = 0;
+    mem->out = 0;
 
+    //inicializando os mecanismos de sincronização
+    inicializaSemaforo(mem);
+    inicializaMutex(mem);
 
+    //criando os processos do produtor
+    for(int i = 0; i < NUM_PRODUTORES; i++){
+
+        pid_t pid = fork();
+
+        //processo q deu erro
+        if(pid < 0){
+
+            printf("Erro ao criar o processo do produtor! \n");
+            exit(EXIT_FAILURE);
+
+        }else if(pid == 0){
+
+            //processo filho
+            produtor(mem, i + 1);
+            exit(EXIT_SUCCESS);
+
+        }
+
+    }
+
+    // criando os processos do consumidor
+    for (int i = 0; i < NUM_CONSUMIDORES; i++) {
+
+        pid_t pid = fork();
+
+        if (pid < 0) {
+            
+            printf("Erro ao criar o processo do produtor! \n");
+            exit(EXIT_FAILURE);
+
+        }else if(pid == 0){
+
+            consumidor(mem, i + 1);
+            exit(EXIT_SUCCESS);
+
+        }
+        
+    }
+
+    //aguardando os processos filhos terminares
+    for(int i = 0; i < NUM_PRODUTORES + NUM_CONSUMIDORES; i++){
+
+        wait(NULL);
+
+    }
+
+    //liberando os recursos
+    pthread_mutex_destroy(&mem->mutex);
+    sem_destroy(&mem->buffer_vazio);
+    sem_destroy(&mem->buffer_cheio);
+
+    munmap(mem, sizeof(ArmMemoriaCompartilhada));
 
     return 0;
 
