@@ -193,7 +193,7 @@ void comer(int id, MemCompartilhada *mem){
 }
 
 //criando a função responsável por "criar" o filósofo
-void fisolofo(int id, MemCompartilhada *mem){
+void filosofo(int id, MemCompartilhada *mem){
 
     for(int i = 0; i < REFEICOES; i++){
 
@@ -233,7 +233,6 @@ int main(){
         if(pid < 0){
 
             //processo que deu erro
-
             printf("Erro ao criar o processo! \n");
             exit(EXIT_FAILURE);
 
@@ -251,34 +250,33 @@ int main(){
 
         }
 
-        //fazendo o processo principal aguardar tds os filhos terminarem
-        for(int i = 0; i < NUM_FILOSOFOS; i++){
-
-            wait(NULL);
-
-        }
-
-        printf("Todos os filosofos terminaram suas refeições! \n");
-
-        //liberando os semáforos
-        for(int i = 0; i < NUM_FILOSOFOS; i++){
-
-            sem_destroy(&mem->garfos[i]);
-
-        }
-
-        //liberando o semáforo limite
-        sem_destroy(&mem->limite);
-
-        //liberando o mutex
-        pthread_mutex_destroy(&mem->mutex);
-
-        //liberando a memória compartilhada
-        munmap(mem, sizeof(MemCompartilhada));
-
-        return 0;
 
     }
+
+    //fazendo o processo principal aguardar tds os filhos terminarem
+    for(int i = 0; i < NUM_FILOSOFOS; i++){
+
+        wait(NULL);
+
+    }
+
+    printf("Todos os filosofos terminaram suas refeições! \n");
+
+    //liberando os semáforos
+    for(int i = 0; i < NUM_FILOSOFOS; i++){
+
+        sem_destroy(&mem->garfos[i]);
+
+    }
+
+    //liberando o semáforo limite
+    sem_destroy(&mem->limite);
+
+    //liberando o mutex
+    pthread_mutex_destroy(&mem->mutex);
+
+    //liberando a memória compartilhada
+    munmap(mem, sizeof(MemCompartilhada));
 
 
     return 0;
