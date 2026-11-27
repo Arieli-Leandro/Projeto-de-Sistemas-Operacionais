@@ -136,15 +136,22 @@ void inicializaMutex(MemCompartilhada * mem){
 
 
 //criando a função q faz o filósofo pensar
-void pensar(int id){
+void pensar(int id, MemCompartilhada *mem){
     
     //vetor de coisas que o filósofo pode estar pensando
     char *pensamento_fisolofo[] = {"Matemática", "Ciências", "Férias", "Natureza", "Existencialismo", "Arte", "Monster Gelado"};
 
     int quantidade = sizeof(pensamento_fisolofo) / sizeof(pensamento_fisolofo[0]);
 
+
+    //protegendo a região de memória para que as mensagens não fiquem se misturando
+
+    pthread_mutex_lock(&mem->mutex);
+
     printf("O filósofo %d  está pensando em... '%s' \n", id, pensamento_fisolofo[rand() % quantidade]);
     sleep(TEMPO_PENSANDO);
+
+    pthread_mutex_unlock(&mem->mutex);
 
     return;
 
@@ -197,8 +204,7 @@ void filosofo(int id, MemCompartilhada *mem){
 
     for(int i = 0; i < REFEICOES; i++){
 
-        pensar(id);
-
+        pensar(id, mem);
         comer(id, mem);
 
     }
