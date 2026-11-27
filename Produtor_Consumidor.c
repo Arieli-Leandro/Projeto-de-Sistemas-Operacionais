@@ -1,37 +1,3 @@
-/*Objetivo: Implementar, na linguagem C, soluções para dois problemas clássicos de programação concorrente, 
-utilizando processos em vez de threads.
-
-Exercício 1 – Problema do Produtor-Consumidor
-Desenvolva uma implementação em C para o problema clássico do Produtor-Consumidor, 
-utilizando processos para representar os produtores e consumidores.
-
-A implementação deverá contemplar um buffer compartilhado de capacidade limitada, 
-no qual os processos produtores inserem elementos e os processos consumidores retiram esses elementos.
-
-A sincronização deverá garantir que:
-
-Um produtor não insira elementos quando o buffer estiver cheio.
-
-Um consumidor não retire elementos quando o buffer estiver vazio.
-
-O acesso ao buffer compartilhado seja realizado de maneira mutuamente exclusiva, 
-evitando condições de corrida (race conditions).
-
-Utilize mecanismos de comunicação e sincronização entre processos, como memória compartilhada, 
-mutexes e semáforos compartilhados. */
-
-//O que vamos usar?
-/* Mutex: Garante que somnete um processo por vez acesse
-a região crítica do buffer
-
-Semáforo (empty): Controla quantas posições vazias existem no buffer
-
-Semáforo (full): Controla quantos produtos estão disponíveis para consumo
-
--> O mutex e os semáforos também precisarão ser compartilhados entre os processos
-
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
